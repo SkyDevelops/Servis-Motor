@@ -1,6 +1,8 @@
 const supabase = require("../config/supabase");
 const { sendNotification } = require("../services/notificationService");
 
+const VALID_RESERVATION_STATUSES = ["pending", "cancel", "onProgress", "success"];
+
 const countTable = async (table, filterToday = false) => {
   let query = supabase.from(table).select("*", { count: "exact", head: true });
 
@@ -53,11 +55,31 @@ const reservations = async (req, res, next) => {
   try {
     const { data, error } = await supabase
       .from("reservasi")
-      .select("*, profiles(nama,email), kendaraan(merk,tipe,nomor_polisi)")
-      .order("tanggal_servis", { ascending: false });
+      .select("*, kendaraan(merk,tipe,nomor_polisi)")
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
-    res.json(data);
+
+    const userIds = [...new Set(data.map((reservation) => reservation.user_id).filter(Boolean))];
+    if (userIds.length === 0) {
+      res.json(data);
+      return;
+    }
+
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("id,nama,email")
+      .in("id", userIds);
+
+    if (profileError) throw profileError;
+
+    const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
+    const reservationsWithProfiles = data.map((reservation) => ({
+      ...reservation,
+      profiles: profilesById.get(reservation.user_id) || null
+    }));
+
+    res.json(reservationsWithProfiles);
   } catch (error) {
     next(error);
   }
@@ -67,8 +89,8 @@ const updateReservationStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
 
-    if (!status) {
-      return res.status(400).json({ message: "Status wajib diisi" });
+    if (!VALID_RESERVATION_STATUSES.includes(status)) {
+      return res.status(400).json({ message: "Status reservasi tidak valid" });
     }
 
     const { data, error } = await supabase

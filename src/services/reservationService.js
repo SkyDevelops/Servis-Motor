@@ -1,5 +1,7 @@
 const supabase = require("../config/supabase");
 
+const ACTIVE_STATUSES = ["pending", "onProgress"];
+
 const recommendService = (kilometer = 0) => {
   const km = Number(kilometer);
   if (km < 5000) return "Servis Ringan";
@@ -27,7 +29,7 @@ const createReservation = async (userId, payload) => {
     .select("*", { count: "exact", head: true })
     .eq("tanggal_servis", tanggal_servis)
     .eq("jam_servis", jam_servis)
-    .in("status", ["Pending", "Dikonfirmasi"]);
+    .in("status", ACTIVE_STATUSES);
 
   if (slotError) throw slotError;
   if (count > 0) {
@@ -43,7 +45,7 @@ const createReservation = async (userId, payload) => {
         ...payload,
         kendaraan_id,
         user_id: userId,
-        status: "Pending"
+        status: "pending"
       }
     ])
     .select()

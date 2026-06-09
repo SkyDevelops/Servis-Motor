@@ -27,7 +27,7 @@ create table if not exists reservasi (
   jam_servis time not null,
   jenis_servis varchar(100) not null,
   keluhan text,
-  status varchar(30) default 'Pending',
+  status varchar(30) default 'pending',
   created_at timestamp default now()
 );
 

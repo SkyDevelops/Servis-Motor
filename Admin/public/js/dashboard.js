@@ -16,6 +16,13 @@ const stats = {
 const usersTable = document.querySelector("#usersTable");
 const reservationsTable = document.querySelector("#reservationsTable");
 
+const statusMeta = {
+  pending: { label: "Pending", badge: "text-bg-secondary" },
+  cancel: { label: "Cancel", badge: "text-bg-danger" },
+  onProgress: { label: "On Progress", badge: "text-bg-warning" },
+  success: { label: "Success", badge: "text-bg-success" }
+};
+
 const setAlert = (element, message, type = "danger") => {
   if (!element) return;
   element.className = `alert alert-${type}`;
@@ -64,9 +71,19 @@ const renderUsers = (users) => {
 
 const renderReservations = (reservations) => {
   reservationsTable.innerHTML = "";
+  if (reservations.length === 0) {
+    reservationsTable.innerHTML = `
+      <tr>
+        <td class="text-center text-muted" colspan="7">Belum ada reservasi masuk.</td>
+      </tr>
+    `;
+    return;
+  }
+
   reservations.forEach((reservation) => {
     const customer = reservation.profiles;
     const vehicle = reservation.kendaraan;
+    const currentStatus = statusMeta[reservation.status] || statusMeta.pending;
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${customer?.nama || "-"}</td>
@@ -75,11 +92,20 @@ const renderReservations = (reservations) => {
       <td>${reservation.jam_servis}</td>
       <td>${reservation.jenis_servis}</td>
       <td>
-        <select class="form-select form-select-sm" data-reservation-id="${reservation.id}">
-          ${["Pending", "Dikonfirmasi", "Ditolak", "Selesai"].map((status) => `
-            <option value="${status}" ${reservation.status === status ? "selected" : ""}>${status}</option>
-          `).join("")}
-        </select>
+        <span class="badge ${currentStatus.badge}">${currentStatus.label}</span>
+      </td>
+      <td>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Ubah status reservasi">
+          <button class="btn btn-outline-danger" type="button" data-reservation-id="${reservation.id}" data-status="cancel">
+            Cancel
+          </button>
+          <button class="btn btn-outline-warning" type="button" data-reservation-id="${reservation.id}" data-status="onProgress">
+            On Progress
+          </button>
+          <button class="btn btn-outline-success" type="button" data-reservation-id="${reservation.id}" data-status="success">
+            Success
+          </button>
+        </div>
       </td>
     `;
     reservationsTable.appendChild(row);
@@ -134,18 +160,22 @@ if (loginForm) {
 }
 
 if (reservationsTable) {
-  reservationsTable.addEventListener("change", async (event) => {
-    const select = event.target.closest("[data-reservation-id]");
-    if (!select) return;
+  reservationsTable.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-reservation-id][data-status]");
+    if (!button) return;
 
     try {
-      await request(`/api/admin/reservations/${select.dataset.reservationId}`, {
+      button.disabled = true;
+      await request(`/api/admin/reservations/${button.dataset.reservationId}`, {
         method: "PUT",
-        body: JSON.stringify({ status: select.value })
+        body: JSON.stringify({ status: button.dataset.status })
       });
       setAlert(dashboardAlert, "Status reservasi berhasil diperbarui", "success");
+      await loadDashboard();
     } catch (error) {
       setAlert(dashboardAlert, error.message);
+    } finally {
+      button.disabled = false;
     }
   });
 }

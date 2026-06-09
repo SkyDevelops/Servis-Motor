@@ -7,6 +7,13 @@ const reservationTable = document.querySelector("#reservationTable");
 const pageAlert = document.querySelector("#pageAlert");
 const logoutButton = document.querySelector("#logoutButton");
 
+const statusMeta = {
+  pending: { label: "Pending", badge: "text-bg-secondary" },
+  cancel: { label: "Cancel", badge: "text-bg-danger" },
+  onProgress: { label: "On Progress", badge: "text-bg-warning" },
+  success: { label: "Success", badge: "text-bg-success" }
+};
+
 const authHeaders = () => ({
   "Content-Type": "application/json",
   Authorization: `Bearer ${token}`
@@ -62,13 +69,14 @@ const renderReservations = (reservations) => {
 
   reservations.forEach((reservation) => {
     const vehicle = reservation.kendaraan;
+    const currentStatus = statusMeta[reservation.status] || statusMeta.pending;
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${reservation.tanggal_servis}</td>
       <td>${reservation.jam_servis}</td>
       <td>${vehicle ? `${vehicle.merk} ${vehicle.tipe}` : "-"}</td>
       <td>${reservation.jenis_servis}</td>
-      <td><span class="badge text-bg-secondary">${reservation.status}</span></td>
+      <td><span class="badge ${currentStatus.badge}">${currentStatus.label}</span></td>
     `;
     reservationTable.appendChild(row);
   });
