@@ -33,92 +33,286 @@
     </main>
 
     <div id="dashboardView" hidden>
-      <nav class="navbar sticky-top">
-        <div class="container-fluid px-4">
-          <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="/">
+      <nav class="admin-navbar sticky-top">
+        <a class="admin-brand" href="/">
+          <span class="brand-logo-wrap">
             <img class="brand-logo" src="/assets/logo-SiMontir.webp" alt="Logo SiMontir">
-            Admin SiMontir
-          </a>
-          <button class="btn btn-outline-secondary btn-sm" id="logoutButton" type="button">
-            <i class="bi bi-box-arrow-right me-1"></i>Logout
-          </button>
-        </div>
+          </span>
+          <span>AdminSiMontir</span>
+        </a>
       </nav>
 
-      <main class="container-fluid px-4 py-4">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
-          <div>
-            <h1 class="h3 fw-bold mb-1">Dashboard Admin</h1>
-            <p class="text-muted-clean mb-0">Pantau pelanggan, kendaraan, dan reservasi servis.</p>
-          </div>
-        </div>
+      <div class="admin-shell" id="adminShell">
+        <aside class="admin-sidebar" id="adminSidebar">
+          <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+          </button>
+          <nav class="sidebar-menu" aria-label="Menu admin">
+            <button class="sidebar-link active" type="button" data-section="dashboardSection">
+              <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+            </button>
+            <button class="sidebar-link" type="button" data-section="cashierSection">
+              <i class="bi bi-receipt-cutoff"></i><span>Kasir</span>
+            </button>
+            <button class="sidebar-link" type="button" data-section="realtimeReservationsSection">
+              <i class="bi bi-broadcast"></i><span>List Reservasi Realtime</span>
+            </button>
+            <button class="sidebar-link" type="button" data-section="reportsSection">
+              <i class="bi bi-file-earmark-bar-graph"></i><span>Laporan</span>
+            </button>
+            <button class="sidebar-link" type="button" data-section="historySection">
+              <i class="bi bi-clock-history"></i><span>History Reservasi</span>
+            </button>
+            <button class="sidebar-link" type="button" data-section="stockSection">
+              <i class="bi bi-box-seam"></i><span>Stok Barang</span>
+            </button>
+            <button class="sidebar-link" type="button" data-section="settingsSection">
+              <i class="bi bi-gear"></i><span>Setting</span>
+            </button>
+            <button class="sidebar-link sidebar-logout" id="logoutButton" type="button">
+              <i class="bi bi-box-arrow-right"></i><span>Log out</span>
+            </button>
+          </nav>
+        </aside>
 
-        <div class="alert alert-danger" id="dashboardAlert" hidden></div>
+        <main class="admin-content">
+          <div class="alert alert-danger" id="dashboardAlert" hidden></div>
 
-        <div class="row g-3 mb-3">
-          <div class="col-md-6 col-xl-3">
-            <div class="stat-card">
-              <span class="text-muted-clean">Total Pelanggan</span>
-              <strong id="totalPelanggan">0</strong>
+          <section class="content-section active" id="dashboardSection">
+            <div class="section-heading">
+              <div>
+                <h1>Dashboard Admin</h1>
+                <p>Pantau statistik, grafik reservasi, history terbaru, dan tagihan supplier.</p>
+              </div>
             </div>
-          </div>
-          <div class="col-md-6 col-xl-3">
-            <div class="stat-card">
-              <span class="text-muted-clean">Total Kendaraan</span>
-              <strong id="totalKendaraan">0</strong>
-            </div>
-          </div>
-          <div class="col-md-6 col-xl-3">
-            <div class="stat-card">
-              <span class="text-muted-clean">Total Reservasi</span>
-              <strong id="totalReservasi">0</strong>
-            </div>
-          </div>
-          <div class="col-md-6 col-xl-3">
-            <div class="stat-card">
-              <span class="text-muted-clean">Reservasi Hari Ini</span>
-              <strong id="reservasiHariIni">0</strong>
-            </div>
-          </div>
-        </div>
 
-        <section class="panel mb-3">
-          <h2 class="h5 fw-bold mb-3">Reservasi Masuk</h2>
-          <div class="table-wrap">
-            <table class="table align-middle">
-              <thead>
-                <tr>
-                  <th>Pelanggan</th>
-                  <th>Kendaraan</th>
-                  <th>Tanggal</th>
-                  <th>Jam</th>
-                  <th>Jenis</th>
-                  <th>Status</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="reservationsTable"></tbody>
-            </table>
-          </div>
-        </section>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <i class="bi bi-people"></i>
+                <span>Total Pelanggan</span>
+                <strong id="totalPelanggan">0</strong>
+              </div>
+              <div class="stat-card">
+                <i class="bi bi-bicycle"></i>
+                <span>Total Kendaraan</span>
+                <strong id="totalKendaraan">0</strong>
+              </div>
+              <div class="stat-card">
+                <i class="bi bi-calendar-check"></i>
+                <span>Total Reservasi</span>
+                <strong id="totalReservasi">0</strong>
+              </div>
+              <div class="stat-card">
+                <i class="bi bi-calendar-day"></i>
+                <span>Reservasi Hari Ini</span>
+                <strong id="reservasiHariIni">0</strong>
+              </div>
+            </div>
 
-        <section class="panel">
-          <h2 class="h5 fw-bold mb-3">Pelanggan</h2>
-          <div class="table-wrap">
-            <table class="table align-middle">
-              <thead>
-                <tr>
-                  <th>Nama</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Terdaftar</th>
-                </tr>
-              </thead>
-              <tbody id="usersTable"></tbody>
-            </table>
-          </div>
-        </section>
-      </main>
+            <div class="dashboard-grid">
+              <section class="panel">
+                <div class="panel-heading">
+                  <h2>Grafik Reservasi</h2>
+                </div>
+                <div class="reservation-chart" id="reservationChart"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-heading">
+                  <h2>Tagihan Supplier</h2>
+                  <span>Jatuh tempo kurang dari 2 hari</span>
+                </div>
+                <div class="table-wrap">
+                  <table class="table align-middle">
+                    <thead>
+                      <tr>
+                        <th>Supplier</th>
+                        <th>Barang</th>
+                        <th>Jatuh Tempo</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="supplierBillsTable"></tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <h2>History Reservasi Terakhir</h2>
+                <span>10 reservasi terbaru</span>
+              </div>
+              <div class="table-wrap">
+                <table class="table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Pelanggan</th>
+                      <th>Kendaraan</th>
+                      <th>Tanggal</th>
+                      <th>Jam</th>
+                      <th>Jenis</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="historyReservationsTable"></tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          <section class="content-section" id="cashierSection">
+            <div class="section-heading">
+              <div>
+                <h1>Kasir</h1>
+                <p>Area kasir untuk transaksi servis dan penjualan barang.</p>
+              </div>
+            </div>
+            <section class="panel empty-panel">Modul kasir siap disambungkan ke transaksi.</section>
+          </section>
+
+          <section class="content-section" id="realtimeReservationsSection">
+            <div class="section-heading">
+              <div>
+                <h1>List Reservasi Realtime</h1>
+                <p>Reservasi masuk dari pelanggan beserta aksi status servis.</p>
+              </div>
+            </div>
+            <section class="panel">
+              <div class="table-wrap">
+                <table class="table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Pelanggan</th>
+                      <th>Kendaraan</th>
+                      <th>Tanggal</th>
+                      <th>Jam</th>
+                      <th>Jenis</th>
+                      <th>Status</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reservationsTable"></tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          <section class="content-section" id="reportsSection">
+            <div class="section-heading">
+              <div>
+                <h1>Laporan</h1>
+                <p>Ringkasan pelanggan, kendaraan, dan reservasi servis.</p>
+              </div>
+            </div>
+            <section class="panel">
+              <div class="table-wrap">
+                <table class="table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Nama</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Terdaftar</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTable"></tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          <section class="content-section" id="historySection">
+            <div class="section-heading">
+              <div>
+                <h1>History Reservasi</h1>
+                <p>Riwayat reservasi lengkap dari seluruh pelanggan.</p>
+              </div>
+            </div>
+            <section class="panel">
+              <div class="table-wrap">
+                <table class="table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Pelanggan</th>
+                      <th>Kendaraan</th>
+                      <th>Tanggal</th>
+                      <th>Jam</th>
+                      <th>Jenis</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="allHistoryTable"></tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          <section class="content-section" id="stockSection">
+            <div class="section-heading">
+              <div>
+                <h1>Stok Barang</h1>
+                <p>Tambah, edit, dan hapus barang bengkel maupun barang supplier.</p>
+              </div>
+            </div>
+            <section class="panel mb-3">
+              <form class="stock-form" id="stockForm">
+                <input id="stockId" name="id" type="hidden">
+                <div>
+                  <label class="form-label" for="stockName">Nama Barang</label>
+                  <input class="form-control" id="stockName" name="nama" placeholder="Busi" required>
+                </div>
+                <div>
+                  <label class="form-label" for="stockSupplier">Supplier</label>
+                  <input class="form-control" id="stockSupplier" name="supplier" placeholder="Supplier utama" required>
+                </div>
+                <div>
+                  <label class="form-label" for="stockQty">Stok</label>
+                  <input class="form-control" id="stockQty" name="stok" type="number" min="0" required>
+                </div>
+                <div>
+                  <label class="form-label" for="stockPrice">Harga</label>
+                  <input class="form-control" id="stockPrice" name="harga" type="number" min="0" required>
+                </div>
+                <div>
+                  <label class="form-label" for="stockDueDate">Jatuh Tempo Tagihan</label>
+                  <input class="form-control" id="stockDueDate" name="jatuh_tempo" type="date" required>
+                </div>
+                <button class="btn btn-simontir" type="submit">
+                  <i class="bi bi-save"></i> Simpan Barang
+                </button>
+              </form>
+            </section>
+            <section class="panel">
+              <div class="table-wrap">
+                <table class="table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Barang</th>
+                      <th>Supplier</th>
+                      <th>Stok</th>
+                      <th>Harga</th>
+                      <th>Jatuh Tempo</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stockTable"></tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          <section class="content-section" id="settingsSection">
+            <div class="section-heading">
+              <div>
+                <h1>Setting</h1>
+                <p>Pengaturan dashboard admin.</p>
+              </div>
+            </div>
+            <section class="panel empty-panel">Pengaturan admin siap dikembangkan.</section>
+          </section>
+        </main>
+      </div>
     </div>
 
     <script src="/js/dashboard.js"></script>
