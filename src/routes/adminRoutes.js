@@ -12,5 +12,7 @@ router.get("/dashboard", adminController.dashboard);
 router.get("/users", adminController.users);
 router.get("/reservations", adminController.reservations);
 router.put("/reservations/:id", adminController.updateReservationStatus);
+router.get("/cashier", adminController.cashierData);
+router.post("/cashier", adminController.createCashierTransaction);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const supabase = require("../config/supabase");
+const cashierService = require("../services/cashierService");
 const { sendNotification } = require("../services/notificationService");
 
 const VALID_RESERVATION_STATUSES = ["pending", "cancel", "onProgress", "success"];
@@ -53,33 +54,75 @@ const users = async (req, res, next) => {
 
 const reservations = async (req, res, next) => {
   try {
-    const { data, error } = await supabase
+    const { data: resData, error: resError } = await supabase
       .from("reservasi")
       .select("*, kendaraan(merk,tipe,nomor_polisi)")
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (resError) throw resError;
 
-    const userIds = [...new Set(data.map((reservation) => reservation.user_id).filter(Boolean))];
-    if (userIds.length === 0) {
-      res.json(data);
-      return;
+    // Fetch offline transactions
+    const { data: offlineTrx, error: trxError } = await supabase
+      .from("transaksi_kasir")
+      .select("*")
+      .is("reservasi_id", null)
+      .order("created_at", { ascending: false });
+
+    if (trxError) throw trxError;
+
+    const formattedOffline = offlineTrx.map(trx => {
+      let plat = "-";
+      let merk = "Kendaraan Offline";
+      const match = trx.catatan?.match(/\[Kendaraan Langsung: (.*?) - (.*?)\]/);
+      if (match) {
+        plat = match[1];
+        merk = match[2];
+      }
+
+      return {
+        id: trx.id,
+        user_id: null,
+        kendaraan_id: null,
+        tanggal_servis: new Date(trx.created_at).toISOString().slice(0, 10),
+        jam_servis: new Date(trx.created_at).toISOString().slice(11, 16),
+        jenis_servis: "Transaksi Kasir (Langsung)",
+        keluhan: trx.catatan || "-",
+        status: trx.status === "dibayar" ? "success" : "pending",
+        created_at: trx.created_at,
+        kendaraan: {
+          merk: merk,
+          tipe: "",
+          nomor_polisi: plat
+        },
+        profiles: {
+          nama: "Pelanggan Offline"
+        },
+        tipe_reservasi: "offline"
+      };
+    });
+
+    const userIds = [...new Set(resData.map((reservation) => reservation.user_id).filter(Boolean))];
+    let profilesById = new Map();
+    
+    if (userIds.length > 0) {
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("id,nama,email")
+        .in("id", userIds);
+
+      if (profileError) throw profileError;
+      profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
     }
 
-    const { data: profiles, error: profileError } = await supabase
-      .from("profiles")
-      .select("id,nama,email")
-      .in("id", userIds);
-
-    if (profileError) throw profileError;
-
-    const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
-    const reservationsWithProfiles = data.map((reservation) => ({
+    const formattedOnline = resData.map((reservation) => ({
       ...reservation,
-      profiles: profilesById.get(reservation.user_id) || null
+      profiles: profilesById.get(reservation.user_id) || null,
+      tipe_reservasi: "online"
     }));
 
-    res.json(reservationsWithProfiles);
+    const combined = [...formattedOnline, ...formattedOffline].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.json(combined);
   } catch (error) {
     next(error);
   }
@@ -109,9 +152,29 @@ const updateReservationStatus = async (req, res, next) => {
   }
 };
 
+const cashierData = async (req, res, next) => {
+  try {
+    const data = await cashierService.loadCashierData();
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createCashierTransaction = async (req, res, next) => {
+  try {
+    const data = await cashierService.createCashierTransaction(req.user.id, req.body);
+    res.status(201).json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   dashboard,
   users,
   reservations,
-  updateReservationStatus
+  updateReservationStatus,
+  cashierData,
+  createCashierTransaction
 };
