@@ -13,7 +13,7 @@ const register = async ({ nama, email, password }) => {
 
   const user = data.user;
   if (user) {
-    const { error: profileError } = await supabase.from("users").insert([
+    const { error: profileError } = await supabase.from("profiles").upsert([
       {
         id: user.id,
         nama,

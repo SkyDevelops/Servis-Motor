@@ -18,7 +18,7 @@ const dashboard = async (req, res, next) => {
   try {
     const [totalPelanggan, totalKendaraan, totalReservasi, reservasiHariIni] =
       await Promise.all([
-        countTable("users"),
+        countTable("profiles"),
         countTable("kendaraan"),
         countTable("reservasi"),
         countTable("reservasi", true)
@@ -38,7 +38,7 @@ const dashboard = async (req, res, next) => {
 const users = async (req, res, next) => {
   try {
     const { data, error } = await supabase
-      .from("users")
+      .from("profiles")
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -53,7 +53,7 @@ const reservations = async (req, res, next) => {
   try {
     const { data, error } = await supabase
       .from("reservasi")
-      .select("*, users(nama,email), kendaraan(merk,tipe,nomor_polisi)")
+      .select("*, profiles(nama,email), kendaraan(merk,tipe,nomor_polisi)")
       .order("tanggal_servis", { ascending: false });
 
     if (error) throw error;

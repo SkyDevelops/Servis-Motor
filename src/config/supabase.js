@@ -3,9 +3,10 @@ const { createClient } = require("@supabase/supabase-js");
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey =
   process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+const supabaseServerKey = process.env.SUPABASE_SECRET_KEY || supabaseAnonKey;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("SUPABASE_URL dan SUPABASE_ANON_KEY/SUPABASE_PUBLISHABLE_KEY wajib diisi.");
+if (!supabaseUrl || !supabaseServerKey) {
+  console.warn("SUPABASE_URL dan SUPABASE_SECRET_KEY/SUPABASE_PUBLISHABLE_KEY wajib diisi.");
 }
 
 const createMissingConfigClient = () => {
@@ -28,8 +29,8 @@ const createMissingConfigClient = () => {
 };
 
 const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
+  supabaseUrl && supabaseServerKey
+    ? createClient(supabaseUrl, supabaseServerKey)
     : createMissingConfigClient();
 
 module.exports = supabase;

@@ -2,10 +2,13 @@
   "name": "simontir",
   "version": "1.0.0",
   "description": "SiMontir - Sistem reservasi servis motor berbasis web.",
-  "main": "src/server.js",
+  "main": "User/server.js",
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "dev": "npm run dev:user",
+    "dev:user": "nodemon User/server.js",
+    "dev:admin": "nodemon Admin/server.js",
+    "start": "node User/server.js",
+    "start:admin": "node Admin/server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
