@@ -41,22 +41,22 @@ const loadCashierData = async () => {
 
   const reservations = reservationsResult.data || [];
   const userIds = [...new Set(reservations.map((reservation) => reservation.user_id).filter(Boolean))];
-  let profilesById = new Map();
+  let usersById = new Map();
 
   if (userIds.length > 0) {
-    const { data: profiles, error: profileError } = await supabase
-      .from("profiles")
+    const { data: usersData, error: userError } = await supabase
+      .from("users")
       .select("id,nama,email")
       .in("id", userIds);
 
-    if (profileError) throw profileError;
-    profilesById = new Map((profiles || []).map((profile) => [profile.id, profile]));
+    if (userError) throw userError;
+    usersById = new Map((usersData || []).map((user) => [user.id, user]));
   }
 
   return {
     reservations: reservations.map((reservation) => ({
       ...reservation,
-      profiles: profilesById.get(reservation.user_id) || null
+      users: usersById.get(reservation.user_id) || null
     })),
     stock: stockResult.data || [],
     services: servicesResult.data || [],

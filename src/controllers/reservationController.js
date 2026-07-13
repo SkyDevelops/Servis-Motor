@@ -53,6 +53,15 @@ const remove = async (req, res, next) => {
   }
 };
 
+const getById = async (req, res, next) => {
+  try {
+    const data = await reservationService.getReservationById(req.user.id, req.params.id);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const recommend = (req, res) => {
   const rekomendasi = reservationService.recommendService(req.body.kilometer);
   res.json({ rekomendasi });
@@ -63,5 +72,6 @@ module.exports = {
   create,
   update,
   remove,
+  getById,
   recommend
 };

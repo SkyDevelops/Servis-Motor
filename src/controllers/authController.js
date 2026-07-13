@@ -1,5 +1,23 @@
 const authService = require("../services/authService");
 
+const getProfile = async (req, res, next) => {
+  try {
+    const data = await authService.getProfile(req.user.id);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const data = await authService.updateProfile(req.user.id, req.body);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const register = async (req, res, next) => {
   try {
     const { nama, email, password } = req.body;
@@ -40,6 +58,8 @@ const logout = async (req, res, next) => {
 };
 
 module.exports = {
+  getProfile,
+  updateProfile,
   register,
   login,
   logout

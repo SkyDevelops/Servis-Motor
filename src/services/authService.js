@@ -1,6 +1,32 @@
 const supabase = require("../config/supabase");
 
-const register = async ({ nama, email, password }) => {
+const getProfile = async (userId) => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId);
+
+  if (error) throw error;
+  
+  if (!data || data.length === 0) {
+    return null;
+  }
+  return data[0];
+};
+
+const updateProfile = async (userId, payload) => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update(payload)
+    .eq("id", userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+const register = async ({ nama, email, password, nomor_handphone, provinsi, kota_domisili }) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -18,7 +44,10 @@ const register = async ({ nama, email, password }) => {
         id: user.id,
         nama,
         email,
-        role: "user"
+        role: "user",
+        nomor_handphone,
+        provinsi,
+        kota_domisili
       }
     ]);
 
@@ -45,6 +74,8 @@ const logout = async () => {
 };
 
 module.exports = {
+  getProfile,
+  updateProfile,
   register,
   login,
   logout

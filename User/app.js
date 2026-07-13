@@ -33,8 +33,20 @@ app.get("/signup", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "signup.html"));
 });
 
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "dashboard.html"));
+});
+
 app.get("/reservasi", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "reservasi.html"));
+});
+
+app.get("/histori", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "histori.html"));
+});
+
+app.get("/profil", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "profil.html"));
 });
 
 app.get("/health", (req, res) => {

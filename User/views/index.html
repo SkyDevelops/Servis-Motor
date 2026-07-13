@@ -26,8 +26,14 @@
             <li class="nav-item"><a class="nav-link" href="#layanan">Layanan</a></li>
             <li class="nav-item"><a class="nav-link" href="#rekomendasi">Rekomendasi</a></li>
             <li class="nav-item"><a class="nav-link" href="#kontak">Kontak</a></li>
-            <li class="nav-item ms-lg-2"><a class="btn btn-outline-secondary btn-sm" href="/login"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a></li>
-            <li class="nav-item ms-lg-2 mt-2 mt-lg-0"><a class="btn btn-simontir btn-sm" href="/signup"><i class="bi bi-person-plus me-1"></i>Sign Up</a></li>
+            <li class="nav-item ms-lg-2" id="authLinks">
+              <a class="btn btn-outline-secondary btn-sm" href="/login"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a>
+              <a class="btn btn-simontir btn-sm" href="/signup"><i class="bi bi-person-plus me-1"></i>Sign Up</a>
+            </li>
+            <li class="nav-item ms-lg-2" id="userLinks" style="display: none;">
+              <a class="btn btn-outline-primary btn-sm" href="/reservasi"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+              <button class="btn btn-outline-danger btn-sm" id="logoutBtn"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+            </li>
           </ul>
         </div>
       </div>

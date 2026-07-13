@@ -38,7 +38,7 @@ if (authForm) {
     setAlert(mode === "login" ? "Login berhasil" : "Sign up berhasil", "success");
 
     setTimeout(() => {
-      window.location.href = mode === "login" ? "/reservasi" : "/login";
+      window.location.href = mode === "login" ? "/dashboard" : "/login";
     }, 600);
   });
 }

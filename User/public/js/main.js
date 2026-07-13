@@ -1,5 +1,25 @@
 const recommendationForm = document.querySelector("#recommendationForm");
 const recommendationResult = document.querySelector("#recommendationResult");
+const authLinks = document.querySelector("#authLinks");
+const userLinks = document.querySelector("#userLinks");
+const logoutBtn = document.querySelector("#logoutBtn");
+
+// Check auth status on load
+const token = localStorage.getItem("simontir_token");
+if (token && authLinks && userLinks) {
+  authLinks.style.display = "none";
+  userLinks.style.display = "block";
+}
+
+// Logout
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    localStorage.removeItem("simontir_token");
+    localStorage.removeItem("simontir_email");
+    window.location.href = "/";
+  });
+}
 
 if (recommendationForm && recommendationResult) {
   recommendationForm.addEventListener("submit", async (event) => {

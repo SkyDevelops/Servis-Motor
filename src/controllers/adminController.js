@@ -21,7 +21,7 @@ const dashboard = async (req, res, next) => {
   try {
     const [totalPelanggan, totalKendaraan, totalReservasi, reservasiHariIni] =
       await Promise.all([
-        countTable("profiles"),
+        countTable("users"),
         countTable("kendaraan"),
         countTable("reservasi"),
         countTable("reservasi", true)
@@ -68,7 +68,7 @@ const reservations = async (req, res, next) => {
       .is("reservasi_id", null)
       .order("created_at", { ascending: false });
 
-    if (trxError) throw trxError;
+    if (trxError) trxError;
 
     const formattedOffline = offlineTrx.map(trx => {
       let plat = "-";
@@ -94,7 +94,7 @@ const reservations = async (req, res, next) => {
           tipe: "",
           nomor_polisi: plat
         },
-        profiles: {
+        profiles: { // Changed from users to profiles
           nama: "Pelanggan Offline"
         },
         tipe_reservasi: "offline"
@@ -105,18 +105,18 @@ const reservations = async (req, res, next) => {
     let profilesById = new Map();
     
     if (userIds.length > 0) {
-      const { data: profiles, error: profileError } = await supabase
-        .from("profiles")
+      const { data: profilesData, error: profileError } = await supabase
+        .from("profiles") // Changed from users to profiles
         .select("id,nama,email")
         .in("id", userIds);
 
       if (profileError) throw profileError;
-      profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
+      profilesById = new Map(profilesData.map((profile) => [profile.id, profile]));
     }
 
     const formattedOnline = resData.map((reservation) => ({
       ...reservation,
-      profiles: profilesById.get(reservation.user_id) || null,
+      profiles: profilesById.get(reservation.user_id) || null, // Changed from users to profiles
       tipe_reservasi: "online"
     }));
 
@@ -140,10 +140,18 @@ const updateReservationStatus = async (req, res, next) => {
       .from("reservasi")
       .update({ status })
       .eq("id", req.params.id)
-      .select()
+      .select("*, kendaraan_id")
       .single();
 
     if (error) throw error;
+
+    // Reset service reminder if status becomes 'success'
+    if (status === 'success') {
+      await supabase
+        .from("kendaraan")
+        .update({ tanggal_servis_terakhir: new Date().toISOString() })
+        .eq("id", data.kendaraan_id);
+    }
 
     await sendNotification(data.user_id, `Status reservasi menjadi ${status}`);
     res.json(data);

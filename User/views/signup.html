@@ -30,6 +30,22 @@
             <label class="form-label" for="password">Password</label>
             <input class="form-control" id="password" name="password" type="password" minlength="6" required>
           </div>
+          <div class="mb-3">
+            <label class="form-label" for="nomor_handphone">Nomor Handphone</label>
+            <input class="form-control" id="nomor_handphone" name="nomor_handphone" type="tel" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="provinsi">Provinsi</label>
+            <select class="form-select" id="provinsi" name="provinsi" required>
+              <option value="">Pilih Provinsi</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="kota_domisili">Kota Domisili</label>
+            <select class="form-select" id="kota_domisili" name="kota_domisili" required disabled>
+              <option value="">Pilih Kota/Kabupaten</option>
+            </select>
+          </div>
           <button class="btn btn-simontir w-100" type="submit">Sign Up</button>
         </form>
         <p class="text-center mt-3 mb-0">
@@ -39,5 +55,45 @@
       </section>
     </main>
     <script src="/js/auth.js"></script>
+    <script>
+      const provinsiSelect = document.getElementById('provinsi');
+      const kotaSelect = document.getElementById('kota_domisili');
+
+      // Fetch local provinces
+      fetch('/js/data/provinces.json')
+        .then(response => response.json())
+        .then(provinces => {
+          provinces.forEach(prov => {
+            const option = document.createElement('option');
+            option.value = prov.name;
+            option.dataset.id = prov.id;
+            option.textContent = prov.name;
+            provinsiSelect.appendChild(option);
+          });
+        });
+
+      provinsiSelect.addEventListener('change', (e) => {
+        const provId = e.target.options[e.target.selectedIndex].dataset.id;
+        kotaSelect.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
+        if (!provId) {
+          kotaSelect.disabled = true;
+          return;
+        }
+
+        // Fetch local regencies
+        fetch('/js/data/regencies.json')
+          .then(response => response.json())
+          .then(data => {
+            const regencies = data[provId] || [];
+            regencies.forEach(reg => {
+              const option = document.createElement('option');
+              option.value = reg.name;
+              option.textContent = reg.name;
+              kotaSelect.appendChild(option);
+            });
+            kotaSelect.disabled = false;
+          });
+      });
+    </script>
   </body>
 </html>

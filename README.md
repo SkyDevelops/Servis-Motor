@@ -65,7 +65,7 @@ URL:
 http://localhost:3001
 ```
 
-Akun admin harus memiliki `role = admin` di tabel `profiles`.
+Akun admin harus memiliki `role = admin` di tabel `users`.
 
 ## Endpoint
 

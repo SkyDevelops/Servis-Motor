@@ -79,10 +79,72 @@ const deleteReservation = async (userId, id) => {
   return { message: "Reservasi berhasil dihapus" };
 };
 
+const getReservationById = async (userId, id) => {
+  const { data, error } = await supabase
+    .from("reservasi")
+    .select(`
+      *,
+      kendaraan(merk, tipe, nomor_polisi, tahun, kilometer),
+      profiles(nama, email),
+      transaksi_kasir(
+        id,
+        reservasi_id,
+        mekanik_id,
+        tanggal,
+        subtotal,
+        diskon,
+        pajak,
+        total,
+        catatan,
+        created_at,
+        updated_at,
+        pembayaran(
+          id,
+          transaksi_id,
+          metode,
+          nominal,
+          kembalian,
+          dibayar_at,
+          status,
+          created_at,
+          updated_at
+        ),
+        detail_transaksi_kasir(
+          id,
+          transaksi_id,
+          service_id,
+          stok_barang_id,
+          tipe_item,
+          nama_item,
+          harga,
+          qty,
+          created_at,
+          updated_at,
+          service_catalog(
+            nama,
+            harga,
+            estimasi_menit
+          ),
+          stok_barang(
+            nama,
+            harga_jual
+          )
+        )
+      )
+    `)
+    .eq("id", id)
+    .eq("user_id", userId)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 module.exports = {
   recommendService,
   listReservations,
   createReservation,
   updateReservation,
-  deleteReservation
+  deleteReservation,
+  getReservationById
 };
