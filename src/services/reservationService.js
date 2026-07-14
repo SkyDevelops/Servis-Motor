@@ -87,48 +87,12 @@ const getReservationById = async (userId, id) => {
       kendaraan(merk, tipe, nomor_polisi, tahun, kilometer),
       profiles(nama, email),
       transaksi_kasir(
-        id,
-        reservasi_id,
-        mekanik_id,
-        tanggal,
-        subtotal,
-        diskon,
-        pajak,
-        total,
-        catatan,
-        created_at,
-        updated_at,
-        pembayaran(
-          id,
-          transaksi_id,
-          metode,
-          nominal,
-          kembalian,
-          dibayar_at,
-          status,
-          created_at,
-          updated_at
-        ),
+        *,
+        pembayaran(*),
         detail_transaksi_kasir(
-          id,
-          transaksi_id,
-          service_id,
-          stok_barang_id,
-          tipe_item,
-          nama_item,
-          harga,
-          qty,
-          created_at,
-          updated_at,
-          service_catalog(
-            nama,
-            harga,
-            estimasi_menit
-          ),
-          stok_barang(
-            nama,
-            harga_jual
-          )
+          *,
+          service_catalog(nama, harga, estimasi_menit),
+          stok_barang(nama, harga_jual)
         )
       )
     `)

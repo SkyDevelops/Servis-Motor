@@ -71,6 +71,150 @@
         background-color: #c82333;
         border-color: #bd2130;
       }
+
+      /* ===================== */
+      /* Invoice styling       */
+      /* ===================== */
+      #invoiceArea {
+        font-size: 0.9rem;
+        color: #212529;
+      }
+      .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #343a40;
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+      .invoice-header .invoice-brand {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+      .invoice-header .invoice-brand img {
+        height: 56px;
+        object-fit: contain;
+      }
+      .invoice-header .invoice-brand-name {
+        font-weight: 800;
+        font-size: 1.05rem;
+        margin: 0;
+        color: #212529;
+      }
+      .invoice-header .invoice-brand-info {
+        font-size: 0.78rem;
+        color: #555;
+        margin: 0;
+        line-height: 1.3;
+      }
+      .invoice-header .invoice-datetime {
+        font-size: 0.8rem;
+        color: #555;
+        white-space: nowrap;
+      }
+      .invoice-title-block {
+        text-align: center;
+        margin-bottom: 1rem;
+      }
+      .invoice-title-block h4 {
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-bottom: 0.15rem;
+      }
+      .invoice-title-block .invoice-number {
+        font-weight: 700;
+        color: #333;
+      }
+      .invoice-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.25rem;
+      }
+      .invoice-info-grid dl {
+        display: grid;
+        grid-template-columns: 110px 10px 1fr;
+        row-gap: 0.25rem;
+        margin: 0;
+        font-size: 0.85rem;
+      }
+      .invoice-info-grid dt { font-weight: 600; color: #333; }
+      .invoice-info-grid dd { margin: 0; color: #333; }
+      .invoice-section-label {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+      .invoice-item-table th,
+      .invoice-item-table td {
+        font-size: 0.82rem;
+        vertical-align: middle;
+      }
+      .invoice-item-table thead th {
+        background: #f1f2f4;
+        border-bottom: 1px solid #ccc;
+      }
+      .invoice-summary {
+        width: 100%;
+        max-width: 340px;
+        margin-left: auto;
+        font-size: 0.85rem;
+      }
+      .invoice-summary .row-line {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+      }
+      .invoice-summary .row-line.total {
+        border-top: 1px solid #ccc;
+        margin-top: 0.25rem;
+        padding-top: 0.5rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      .invoice-summary .row-line.paid { font-weight: 700; }
+      .invoice-stamp-wrap {
+        display: flex;
+        justify-content: flex-end;
+        margin: 0.5rem 0;
+      }
+      .invoice-stamp {
+        display: inline-block;
+        border: 3px solid #d33;
+        color: #d33;
+        font-weight: 800;
+        font-size: 1.1rem;
+        letter-spacing: 2px;
+        padding: 0.2rem 1rem;
+        transform: rotate(-8deg);
+        border-radius: 6px;
+        opacity: 0.85;
+      }
+      .invoice-stamp.belum-lunas {
+        border-color: #6c757d;
+        color: #6c757d;
+      }
+      .invoice-footnote {
+        text-align: center;
+        margin-top: 1.25rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed #ccc;
+        font-size: 0.78rem;
+        color: #777;
+      }
+
+      @media print {
+        body * { visibility: hidden; }
+        #invoiceArea, #invoiceArea * { visibility: visible; }
+        #invoiceArea {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          padding: 1rem;
+        }
+      }
     </style>
   </head>
   <body>
@@ -142,7 +286,7 @@
 
     <!-- Invoice Detail Modal -->
     <div class="modal fade" id="invoiceDetailModal" tabindex="-1" aria-labelledby="invoiceDetailModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="invoiceDetailModalLabel">Detail Invoice</h5>
@@ -152,6 +296,9 @@
             <!-- Content will be loaded here -->
           </div>
           <div class="modal-footer">
+            <button type="button" class="btn btn-outline-primary" id="printInvoiceBtn">
+              <i class="bi bi-printer me-1"></i>Cetak
+            </button>
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
           </div>
         </div>
@@ -160,15 +307,188 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+      // ===================================================
+      // Helper formatters
+      // ===================================================
+      const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('id-ID', {
+          day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+      };
+
+      const formatDateTime = (dateString) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return `${formatDate(dateString)} ${date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+      };
+
+      const formatRupiah = (amount) => 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
+
+      const formatTime = (timeString) => timeString ? timeString.substring(0, 5) : '-';
+
+      const getFirst = (val) => (Array.isArray(val) && val.length > 0 ? val[0] : (Array.isArray(val) ? null : val));
+
+      const getNested = (obj, path) =>
+        path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined ? acc[part] : null), obj);
+
+      // ===================================================
+      // Build invoice HTML (AHASS-style layout)
+      // ===================================================
+      const buildInvoiceHtml = (reservation) => {
+        const vehicleInfo = `${getNested(reservation, 'kendaraan.merk') || '-'} ${getNested(reservation, 'kendaraan.tipe') || ''}`.trim();
+        const platNomor = getNested(reservation, 'kendaraan.nomor_polisi') || '-';
+        const customerName = getNested(reservation, 'profiles.nama') || '-';
+        const customerEmail = getNested(reservation, 'profiles.email') || '-';
+        const customerPhone = getNested(reservation, 'profiles.telpon') || '-';
+        const customerAlamat = getNested(reservation, 'profiles.alamat') || '-';
+        const serviceType = getNested(reservation, 'jenis_servis') || '-';
+        const keluhan = getNested(reservation, 'keluhan') || '-';
+
+        const transaksiArray = getNested(reservation, 'transaksi_kasir') || [];
+        const transaksi = getFirst(transaksiArray);
+        const pembayaran = transaksi ? getFirst(getNested(transaksi, 'pembayaran')) : null;
+        const detailTransaksi = transaksi ? (getNested(transaksi, 'detail_transaksi_kasir') || []) : [];
+
+        const noInvoice = transaksi?.nomor_transaksi || `INV-${reservation.id}`;
+        const tanggalTransaksi = transaksi?.created_at || reservation.created_at;
+        const refNo = `WO.${reservation.id}`;
+        const refDate = formatDate(reservation.tanggal_servis);
+        const noPelanggan = getNested(reservation, 'profiles.id') ? `CS.${getNested(reservation, 'profiles.id')}` : '-';
+
+        // Item rows
+        const itemRows = detailTransaksi.map((item, index) => {
+          const serviceRel = getFirst(getNested(item, 'service_catalog'));
+          const stockRel = getFirst(getNested(item, 'stok_barang'));
+          const itemName = serviceRel?.nama || stockRel?.nama || item.nama_item || '-';
+          const qty = item.qty || 1;
+          const harga = Number(item.harga || 0);
+          const subtotal = harga * qty;
+          return `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${item.kode || '-'}</td>
+              <td>${itemName}</td>
+              <td class="text-center">${qty}</td>
+              <td class="text-center">${item.tipe_item === 'service' ? 'Jasa' : 'Pcs'}</td>
+              <td class="text-end">${formatRupiah(harga)}</td>
+              <td class="text-end">${formatRupiah(subtotal)}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const subtotalItems = detailTransaksi.reduce(
+          (sum, item) => sum + (Number(item.harga || 0) * (item.qty || 1)), 0
+        );
+
+        const diskon = Number(transaksi?.diskon || 0);
+        const pajak = Number(transaksi?.pajak || 0);
+        const totalTagihan = Number(transaksi?.total ?? (subtotalItems - diskon + pajak));
+        const dibayarkan = Number(pembayaran?.nominal || 0);
+        const kembalian = Number(pembayaran?.kembalian || 0);
+        const sisaKewajiban = Math.max(0, totalTagihan - dibayarkan);
+        const isLunas = pembayaran ? (pembayaran.status === 'dibayar' || sisaKewajiban <= 0) : false;
+
+        return `
+          <div id="invoiceArea">
+            <div class="invoice-header">
+              <div class="invoice-brand">
+                <img src="/assets/logo-SiMontir.webp" alt="Logo SiMontir">
+                <div>
+                  <p class="invoice-brand-name">SIMONTIR BENGKEL &amp; SERVICE</p>
+                  <p class="invoice-brand-info">
+                    Penjualan - Pemeliharaan - Suku Cadang<br>
+                    Jl. Raya SiMontir No. 123, Kota Servis<br>
+                    Telp. (021) 123-4567
+                  </p>
+                </div>
+              </div>
+              <div class="invoice-datetime">${formatDateTime(tanggalTransaksi)}</div>
+            </div>
+
+            <div class="invoice-title-block">
+              <h4>INVOICE</h4>
+              <div class="invoice-number">${noInvoice}</div>
+            </div>
+
+            <div class="invoice-info-grid">
+              <dl>
+                <dt>No Pelanggan</dt><dd>:</dd><dd>${noPelanggan}</dd>
+                <dt>Nama</dt><dd>:</dd><dd>${customerName}</dd>
+                <dt>Alamat</dt><dd>:</dd><dd>${customerAlamat}</dd>
+                <dt>Telpon</dt><dd>:</dd><dd>${customerPhone !== '-' ? customerPhone : customerEmail}</dd>
+              </dl>
+              <dl>
+                <dt>No Polisi</dt><dd>:</dd><dd>${platNomor}</dd>
+                <dt>Ref. No</dt><dd>:</dd><dd>${refNo}</dd>
+                <dt>Ref. Date</dt><dd>:</dd><dd>${refDate}</dd>
+                <dt>Jenis Servis</dt><dd>:</dd><dd>${serviceType}</dd>
+              </dl>
+            </div>
+
+            <div class="invoice-section-label">#Sparepart / Jasa Servis</div>
+            <div class="table-responsive mb-3">
+              <table class="table table-bordered invoice-item-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Kode</th>
+                    <th>Deskripsi</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-center">Tipe</th>
+                    <th class="text-end">Harga</th>
+                    <th class="text-end">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemRows || `<tr><td colspan="7" class="text-center text-muted">Belum ada item transaksi</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+
+            ${keluhan && keluhan !== '-' ? `
+              <div class="mb-3">
+                <div class="invoice-section-label">Keluhan</div>
+                <p class="bg-light p-2 rounded">${keluhan}</p>
+              </div>
+            ` : ''}
+
+            <div class="invoice-summary">
+              <div class="row-line"><span>Sub Total</span><span>${formatRupiah(subtotalItems)}</span></div>
+              <div class="row-line"><span>Diskon</span><span>${formatRupiah(diskon)}</span></div>
+              <div class="row-line"><span>PPN / Pajak</span><span>${formatRupiah(pajak)}</span></div>
+              <div class="row-line total"><span>Total Tagihan</span><span>${formatRupiah(totalTagihan)}</span></div>
+              <div class="row-line paid"><span>Dibayarkan (${pembayaran?.metode || '-'})</span><span>${formatRupiah(dibayarkan)}</span></div>
+              <div class="row-line"><span>Kembalian</span><span>${formatRupiah(kembalian)}</span></div>
+            </div>
+
+            <div class="invoice-stamp-wrap">
+              <span class="invoice-stamp ${isLunas ? '' : 'belum-lunas'}">${isLunas ? 'LUNAS' : 'BELUM LUNAS'}</span>
+            </div>
+
+            <div class="invoice-summary">
+              <div class="row-line"><span>Sisa Kewajiban</span><span>${formatRupiah(sisaKewajiban)}</span></div>
+            </div>
+
+            <div class="invoice-footnote">
+              Terima kasih telah menggunakan layanan SiMontir.<br>
+              Invoice ini sah tanpa tanda tangan.
+            </div>
+          </div>
+        `;
+      };
+
+      // ===================================================
       // Show invoice detail in modal
+      // ===================================================
       let invoiceDetailModal = null;
+
       async function showInvoiceDetail(reservationId) {
         const token = localStorage.getItem('simontir_token');
         if (!token) return;
 
         const modalContent = document.getElementById('invoiceDetailContent');
 
-        // Show loading state
         modalContent.innerHTML = `
           <div class="text-center py-4">
             <div class="spinner-border text-primary" role="status">
@@ -178,6 +498,11 @@
           </div>
         `;
 
+        if (!invoiceDetailModal) {
+          invoiceDetailModal = new bootstrap.Modal(document.getElementById('invoiceDetailModal'));
+        }
+        invoiceDetailModal.show();
+
         try {
           const response = await fetch(`/api/reservations/${reservationId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -186,204 +511,7 @@
 
           if (!response.ok) throw new Error(reservation.message || 'Gagal memuat detail reservasi');
 
-          // Helper to get first element if array or value itself
-          const getFirst = (val) => {
-            if (Array.isArray(val) && val.length > 0) return val[0];
-            return val;
-          };
-
-          // Format functions
-          const formatDate = (dateString) => {
-            if (!dateString) return '-';
-            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            return new Date(dateString).toLocaleDateString('id-ID', options);
-          };
-
-          const formatRupiah = (amount) => {
-            if (amount === null || amount === undefined) return '-';
-            return 'Rp ' + Number(amount).toLocaleString('id-ID');
-          };
-
-          const formatTime = (timeString) => {
-            if (!timeString) return '-';
-            return timeString.substring(0, 5); // HH:MM format
-          };
-
-          // Helper to safely get nested properties
-          const getNested = (obj, path) => {
-            return path.split('.').reduce((obj, part) => (obj && obj[part] !== undefined ? obj[part] : null), obj);
-          };
-
-          // Extract data with safe navigation
-          const formattedDate = formatDate(getNested(reservation, 'tanggal_servis'));
-          const formattedTime = formatTime(getNested(reservation, 'jam_servis'));
-          const vehicleInfo = `${getNested(reservation, 'kendaraan.merk') || '-'} ${getNested(reservation, 'kendaraan.tipe') || ''}`.trim();
-          const platNomor = getNested(reservation, 'kendaraan.nomor_polisi') || '-';
-          const tahunKendaraan = getNested(reservation, 'kendaraan.tahun') || '-';
-          const kilometer = getNested(reservation, 'kendaraan.kilometer') || '-';
-          const customerName = getNested(reservation, 'profiles.nama') || '-';
-          const customerEmail = getNested(reservation, 'profiles.email') || '-';
-          const serviceType = getNested(reservation, 'jenis_servis') || '-';
-          const status = getNested(reservation, 'status') || '-';
-          const keluhan = getNested(reservation, 'keluhan') || '-';
-          const createdAt = getNested(reservation, 'created_at');
-
-          // Payment and transaction data
-          const transaksiArray = getNested(reservation, 'transaksi_kasir') || [];
-          const transaksi = getFirst(transaksiArray);
-          const pembayaran = transaksi ? getFirst(getNested(transaksi, 'pembayaran')) : null;
-          const detailTransaksi = transaksi ? getNested(transaksi, 'detail_transaksi_kasir') || [] : [];
-
-          // Format payment info
-          const paymentInfo = pembayaran ? `
-            <div>
-              <h6>Informasi Pembayaran</h6>
-              <div class="mb-2"><strong>Metode Pembayaran:</strong> ${pembayaran.metode || '-'}</div>
-              <div class="mb-2"><strong>Jumlah Pembayaran:</strong> ${formatRupiah(pembayaran.nominal)}</div>
-              <div class="mb-2"><strong>Kembalian:</strong> ${formatRupiah(pembayaran.kembalian || 0)}</div>
-              <div class="mb-2"><strong>Status Pembayaran:</strong>
-                <span class="badge bg-${pembayaran.status === 'dibayar' ? 'success' : pembayaran.status === 'pending' ? 'warning' : 'danger'}">
-                  ${pembayaran.status === 'dibayar' ? 'Lunas' : pembayaran.status === 'pending' ? 'Menunggu' : pembayaran.status || '-'}
-                </span>
-              </div>
-              <div class="mb-2"><strong>Tanggal Pembayaran:</strong> ${pembayaran.dibayar_at ? formatDate(pembayaran.dibayar_at) : '-'}</div>
-            </div>
-          ` : `
-            <div>
-              <h6>Informasi Pembayaran</h6>
-              <div class="mb-2"><strong>Metode Pembayaran:</strong> Belum ada pembayaran</div>
-              <div class="mb-2"><strong>Jumlah Pembayaran:</strong> Rp 0</div>
-              <div class="mb-2"><strong>Kembalian:</strong> Rp 0</div>
-              <div class="mb-2"><strong>Status Pembayaran:</strong>
-                <span class="badge bg-secondary">Belum dibayar</span>
-              </div>
-              <div class="mb-2"><strong>Tanggal Pembayaran:</strong> -</div>
-            </div>
-          `;
-
-          // Format service details
-          const serviceDetails = detailTransaksi && detailTransaksi.length > 0 ? `
-            <div>
-              <h6>Detail Layanan dan Sparepart</h6>
-              <div class="table-responsive">
-                <table class="table table-sm table-bordered">
-                  <thead class="table-light">
-                    <tr>
-                      <th>#</th>
-                      <th>Item</th>
-                      <th>Tipe</th>
-                      <th>Qty</th>
-                      <th>Harga Satuan</th>
-                      <th>Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${detailTransaksi.map((item, index) => {
-                      const subtotal = (item.harga || 0) * (item.qty || 1);
-
-                      // Handle possible array relations from joins
-                      const serviceRel = getNested(item, 'service_catalog');
-                      const serviceArray = Array.isArray(serviceRel) ? serviceRel : [serviceRel];
-                      const serviceObj = serviceArray[0] || {};
-                      const serviceName = serviceObj.nama || item.nama_item || '-';
-
-                      const stockRel = getNested(item, 'stok_barang');
-                      const stockArray = Array.isArray(stockRel) ? stockRel : [stockRel];
-                      const stockObj = stockArray[0] || {};
-                      const partName = stockObj.nama || item.nama_item || '-';
-
-                      const itemName = serviceName !== '-' ? serviceName : partName;
-
-                      return `
-                        <tr>
-                          <td>${index + 1}</td>
-                          <td>${itemName}</td>
-                          <td>${item.tipe_item || '-'}</td>
-                          <td>${item.qty || 1}</td>
-                          <td>${formatRupiah(item.harga)}</td>
-                          <td>${formatRupiah(subtotal)}</td>
-                        </tr>
-                      `;
-                    }).join('')}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colspan="5" class="text-end fw-bold">Total:</td>
-                      <td>${formatRupiah(transaksi ? transaksi.total : 0)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          ` : `
-            <div>
-              <h6>Detail Layanan dan Sparepart</h6>
-              <div class="text-muted">Detail layanan dan sparepart tidak tersedia</div>
-            </div>
-          `;
-
-          // Format additional notes
-          const notes = getNested(transaksi, 'catatan') || keluhan || '-';
-
-          modalContent.innerHTML = `
-            <!-- Invoice Header -->
-            <div class="text-center mb-4">
-              <img src="/assets/logo-SiMontir.webp" alt="Logo SiMontir" class="img-fluid" style="max-height: 60px;">
-              <h5 class="mt-3">SI MONTIR</h5>
-              <p class="text-muted">Jl. Raya SiMontir No. 123, Kota Servis</p>
-              <p class="text-muted">Telp. (021) 123-4567</p>
-            </div>
-
-            <div class="border-bottom pb-3 mb-4">
-              <h5 class="mb-0">INVOICE / NOTA</h5>
-              <p class="text-muted mb-0">Nomor: ${getNested(transaksi, 'nomor_transaksi') || '-'}</p>
-              <p class="text-muted mb-0">Tanggal: ${formattedDate} ${formattedTime !== '-' ? formattedTime : ''}</p>
-            </div>
-
-            <div class="row mb-4">
-              <div class="col-md-6">
-                <h6>Informasi Pelanggan</h6>
-                <div class="mb-2"><strong>Nama:</strong> ${customerName}</div>
-                <div class="mb-2"><strong>Email:</strong> ${customerEmail}</div>
-                <div class="mb-2"><strong>No. Telepon:</strong> -</div>
-                <div class="mb-2"><strong>Alamat:</strong> -</div>
-              </div>
-              <div class="col-md-6">
-                <h6>Informasi Kendaraan</h6>
-                <div class="mb-2"><strong>Merk/Tipe:</strong> ${vehicleInfo}</div>
-                <div class="mb-2"><strong>Nomor Polisi:</strong> ${platNomor}</div>
-                <div class="mb-2"><strong>Tahun:</strong> ${tahunKendaraan}</div>
-                <div class="mb-2"><strong>Kilometer:</strong> ${kilometer} km</div>
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <h6>Keluhan/Service Request</h6>
-              <p class="bg-light p-3 rounded">${keluhan}</p>
-            </div>
-
-            ${serviceDetails}
-
-            ${paymentInfo}
-
-            <div class="mb-4">
-              <h6>Catatan</h6>
-              <p>${notes !== '-' ? notes : '<em class="text-muted">Tidak ada catatan</em>'}</p>
-            </div>
-
-            <div class="text-center mt-4 pt-3 border-top">
-              <small class="text-muted">
-                Terima kasih telah menggunakan layanan SiMontir.<br>
-                Sampai jumpa di servis berikutnya!
-              </small>
-            </div>
-          `;
-
-          // Show modal
-          if (!invoiceDetailModal) {
-            invoiceDetailModal = new bootstrap.Modal(document.getElementById('invoiceDetailModal'));
-          }
-          invoiceDetailModal.show();
+          modalContent.innerHTML = buildInvoiceHtml(reservation);
         } catch (err) {
           console.error('Error loading invoice detail:', err);
           modalContent.innerHTML = `
@@ -392,19 +520,19 @@
                 <i class="bi bi-exclamation-triangle fs-4 mb-3"></i>
                 <p>${err.message}</p>
               </div>
-              <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">Coba Lagi</button>
+              <button type="button" class="btn btn-outline-secondary" onclick="showInvoiceDetail('${reservationId}')">Coba Lagi</button>
             </div>
           `;
-
-          // Show modal even on error
-          if (!invoiceDetailModal) {
-            invoiceDetailModal = new bootstrap.Modal(document.getElementById('invoiceDetailModal'));
-          }
-          invoiceDetailModal.show();
         }
       }
 
+      document.getElementById('printInvoiceBtn').addEventListener('click', () => {
+        window.print();
+      });
+
+      // ===================================================
       // Histori page functionality
+      // ===================================================
       document.addEventListener('DOMContentLoaded', async () => {
         const token = localStorage.getItem('simontir_token');
         if (!token) {
@@ -456,7 +584,7 @@
                 </span>
               </td>
               <td>
-                <button class="btn btn-sm btn-outline-info" onclick="showInvoiceDetail(${res.id})">
+                <button class="btn btn-sm btn-outline-info" onclick="showInvoiceDetail('${res.id}')">
                   <i class="bi bi-file-earmark-text me-1"></i>Detail
                 </button>
               </td>
@@ -467,7 +595,7 @@
           console.error('Error loading history:', err);
           historyTableBody.innerHTML = `
             <tr>
-              <td colspan="7" class="text-center text-danger">
+              <td colspan="8" class="text-center text-danger">
                 <i class="bi bi-exclamation-triangle me-2"></i>
                 Gagal memuat histori: ${err.message}
               </td>
@@ -475,6 +603,17 @@
           `;
         }
       });
+
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          await fetch('/api/auth/logout', { method: 'POST' });
+          localStorage.removeItem('simontir_token');
+          localStorage.removeItem('simontir_email');
+          window.location.href = '/';
+        });
+      }
+
       // Set active nav link
       const path = window.location.pathname;
       document.querySelectorAll('.nav-link').forEach(link => {

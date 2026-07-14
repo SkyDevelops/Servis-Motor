@@ -138,6 +138,9 @@ const renderStats = (data) => {
 };
 
 const renderUsers = (users) => {
+
+  if (!usersTable) return;
+
   usersTable.innerHTML = "";
   users.forEach((user) => {
     const row = document.createElement("tr");
@@ -188,10 +191,28 @@ const reservationRows = (reservations, withActions = false) => {
 };
 
 const renderReservations = (reservations) => {
-  const sortedReservations = [...reservations].sort((a, b) => reservationDateValue(b) - reservationDateValue(a));
-  reservationsTable.innerHTML = reservationRows(sortedReservations, true);
-  historyReservationsTable.innerHTML = reservationRows(sortedReservations.slice(0, 10));
-  allHistoryTable.innerHTML = reservationRows(sortedReservations);
+
+  const sortedReservations = [...reservations]
+    .sort((a, b) => reservationDateValue(b) - reservationDateValue(a));
+
+
+  if (reservationsTable) {
+    reservationsTable.innerHTML =
+      reservationRows(sortedReservations, true);
+  }
+
+
+  if (historyReservationsTable) {
+    historyReservationsTable.innerHTML =
+      reservationRows(sortedReservations.slice(0,10));
+  }
+
+
+  if (allHistoryTable) {
+    allHistoryTable.innerHTML =
+      reservationRows(sortedReservations);
+  }
+
 };
 
 const renderReservationChart = (reservations) => {
@@ -749,8 +770,134 @@ if (cashierPaymentForm) {
   });
 }
 
+// =======================================
+// LAPORAN KEUANGAN (Harian / Bulanan / Tahunan)
+// =======================================
+const financialPeriodButtons = document.querySelectorAll(".periode-btn");
+const loadFinancialReportButton = document.querySelector("#loadFinancialReport");
+const financialReportTable = document.querySelector("#financialReportTable");
+const financialTotal = document.querySelector("#financialTotal");
+const reportDate = document.querySelector("#reportDate");
+const financialReportTitle = document.querySelector("#financialReportTitle");
+const financialReportPeriode = document.querySelector("#financialReportPeriode");
+const financialPrintedDate = document.querySelector("#financialPrintedDate");
+let selectedFinancialPeriod = "harian";
+
+const bulanIndonesia = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+];
+
+const formatTanggalIndonesia = (date) =>
+  `${String(date.getDate()).padStart(2, "0")} ${bulanIndonesia[date.getMonth()]} ${date.getFullYear()}`;
+
+const updateFinancialReportHeader = (tanggal) => {
+  const date = new Date(tanggal);
+
+  if (financialReportTitle) {
+    const labelPeriode = {
+      harian: "LAPORAN KEUANGAN HARIAN",
+      bulanan: "LAPORAN KEUANGAN BULANAN",
+      tahunan: "LAPORAN KEUANGAN TAHUNAN"
+    };
+    financialReportTitle.textContent = labelPeriode[selectedFinancialPeriod] || "LAPORAN KEUANGAN";
+  }
+
+  if (financialReportPeriode) {
+    if (selectedFinancialPeriod === "harian") {
+      financialReportPeriode.textContent = `Periode: ${formatTanggalIndonesia(date)}`;
+    } else if (selectedFinancialPeriod === "bulanan") {
+      const awalBulan = new Date(date.getFullYear(), date.getMonth(), 1);
+      const akhirBulan = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      financialReportPeriode.textContent =
+        `Periode: ${formatTanggalIndonesia(awalBulan)} - ${formatTanggalIndonesia(akhirBulan)}`;
+    } else if (selectedFinancialPeriod === "tahunan") {
+      const awalTahun = new Date(date.getFullYear(), 0, 1);
+      const akhirTahun = new Date(date.getFullYear(), 11, 31);
+      financialReportPeriode.textContent =
+        `Periode: ${formatTanggalIndonesia(awalTahun)} - ${formatTanggalIndonesia(akhirTahun)}`;
+    }
+  }
+
+  if (financialPrintedDate) {
+    financialPrintedDate.textContent = formatTanggalIndonesia(new Date());
+  }
+};
+
+const loadFinancialReport = async () => {
+  if (!financialReportTable) return;
+
+  try {
+    const tanggal = reportDate?.value || new Date().toISOString().slice(0, 10);
+    let url = `/api/admin/laporan-keuangan?periode=${selectedFinancialPeriod}`;
+
+    // HARIAN
+    if (selectedFinancialPeriod === "harian") {
+      url += `&tanggal=${tanggal}`;
+    }
+
+    // BULANAN
+    if (selectedFinancialPeriod === "bulanan") {
+      const date = new Date(tanggal);
+      url += `&bulan=${date.getMonth() + 1}`;
+      url += `&tahun=${date.getFullYear()}`;
+    }
+
+    // TAHUNAN
+    if (selectedFinancialPeriod === "tahunan") {
+      const date = new Date(tanggal);
+      url += `&tahun=${date.getFullYear()}`;
+    }
+
+    updateFinancialReportHeader(tanggal);
+
+    const data = await request(url);
+
+    financialReportTable.innerHTML = "";
+    (data.transaksi || []).forEach((trx, index) => {
+      financialReportTable.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${trx.created_at ? new Date(trx.created_at).toLocaleDateString("id-ID") : "-"}</td>
+          <td>${trx.nomor_transaksi || "-"}</td>
+          <td>${trx.status || "-"}</td>
+          <td>${rupiah(trx.total || 0)}</td>
+        </tr>
+      `;
+    });
+
+    if (financialTotal) {
+      financialTotal.textContent = rupiah(data.total_masuk || 0);
+    }
+  } catch (error) {
+    setAlert(dashboardAlert, error.message);
+  }
+};
+
+financialPeriodButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    financialPeriodButtons.forEach((btn) => btn.classList.remove("active"));
+    button.classList.add("active");
+    selectedFinancialPeriod = button.dataset.periode;
+  });
+});
+
+if (loadFinancialReportButton) {
+  loadFinancialReportButton.addEventListener("click", () => {
+    loadFinancialReport();
+  });
+}
+
+// =======================================
+// PRINT LAPORAN
+// =======================================
+window.printFinancialReport = function () {
+  window.print();
+};
+
 loadDashboard();
 renderStock();
+loadFinancialReport();
 
 if (!refreshTimer) {
   refreshTimer = setInterval(() => {

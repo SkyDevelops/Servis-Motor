@@ -8,6 +8,91 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
+    <style>
+      .report-print-header {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        border-bottom: 3px solid #0d3b8c;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .report-print-header .report-logo {
+        width: 70px;
+        height: 70px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+      .report-title-wrap h2 {
+        color: #0d3b8c;
+        font-weight: 800;
+        margin: 0;
+        font-size: 1.4rem;
+        letter-spacing: 0.3px;
+      }
+      .report-title-wrap p {
+        margin: 0.15rem 0 0;
+        color: #444;
+        font-weight: 600;
+      }
+      .report-table thead th {
+        background: #dce6f7;
+        color: #0d3b8c;
+        font-weight: 700;
+        border-color: #b9cbe8;
+      }
+      .report-table td, .report-table th {
+        border-color: #d7dee8;
+        vertical-align: middle;
+      }
+      .report-total-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #0d3b8c;
+        color: #fff;
+        padding: 0.9rem 1.25rem;
+        border-radius: 6px;
+        margin-top: 1rem;
+        font-weight: 800;
+        font-size: 1.1rem;
+        letter-spacing: 0.4px;
+      }
+      .report-print-footer {
+        margin-top: 1rem;
+        margin-bottom: 0;
+        font-size: 0.85rem;
+        color: #777;
+      }
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #financialReportPrintArea,
+        #financialReportPrintArea * {
+          visibility: visible;
+        }
+        #financialReportPrintArea {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          margin: 0;
+          padding: 1rem 0;
+          border: none !important;
+          box-shadow: none !important;
+          background: #fff !important;
+        }
+        .report-total-banner {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .report-table thead th {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    </style>
   </head>
   <body>
     <main id="loginView" class="login-shell">
@@ -339,24 +424,57 @@
           <section class="content-section" id="reportsSection">
             <div class="section-heading">
               <div>
-                <h1>Laporan</h1>
-                <p>Ringkasan pelanggan, kendaraan, dan reservasi servis.</p>
+                <h1>Laporan Keuangan</h1>
+                <p>Laporan pemasukan harian, bulanan, dan tahunan.</p>
               </div>
             </div>
+
             <section class="panel">
+              <div class="mb-3">
+                <button class="btn btn-primary periode-btn" data-periode="harian">Harian</button>
+                <button class="btn btn-primary periode-btn" data-periode="bulanan">Bulanan</button>
+                <button class="btn btn-primary periode-btn" data-periode="tahunan">Tahunan</button>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label>Tanggal</label>
+                  <input type="date" id="reportDate" class="form-control">
+                </div>
+                <div class="col-md-4 mt-4">
+                  <button class="btn btn-success" id="loadFinancialReport">Tampilkan</button>
+                  <button class="btn btn-secondary" onclick="window.print()">Cetak</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel mt-4" id="financialReportPrintArea">
+              <div class="report-print-header">
+                <img class="report-logo" src="/assets/logo-SiMontir.webp" alt="Logo SiMontir">
+                <div class="report-title-wrap">
+                  <h2 id="financialReportTitle">LAPORAN KEUANGAN HARIAN</h2>
+                  <p id="financialReportPeriode">Periode: -</p>
+                </div>
+              </div>
               <div class="table-wrap">
-                <table class="table align-middle">
+                <table class="table report-table align-middle">
                   <thead>
                     <tr>
-                      <th>Nama</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Terdaftar</th>
+                      <th>No</th>
+                      <th>Tanggal</th>
+                      <th>No Transaksi</th>
+                      <th>Status</th>
+                      <th>Uang Masuk</th>
                     </tr>
                   </thead>
-                  <tbody id="usersTable"></tbody>
+                  <tbody id="financialReportTable">
+                  </tbody>
                 </table>
               </div>
+              <div class="report-total-banner">
+                <span>TOTAL UANG MASUK</span>
+                <strong id="financialTotal">Rp 0</strong>
+              </div>
+              <p class="report-print-footer">Dicetak oleh: Admin SiMontir - <span id="financialPrintedDate"></span></p>
             </section>
           </section>
 
@@ -364,9 +482,10 @@
             <div class="section-heading">
               <div>
                 <h1>History Reservasi</h1>
-                <p>Riwayat reservasi lengkap dari seluruh pelanggan.</p>
+                <p>Riwayat reservasi lengkap dari pelanggan.</p>
               </div>
             </div>
+
             <section class="panel">
               <div class="table-wrap">
                 <table class="table align-middle">

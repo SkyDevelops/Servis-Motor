@@ -178,11 +178,220 @@ const createCashierTransaction = async (req, res, next) => {
   }
 };
 
+const dailyFinancialReport = async (req, res, next) => {
+  try {
+    const tanggal =
+      req.query.tanggal || new Date().toISOString().slice(0, 10);
+
+    const { data: transaksi, error } = await supabase
+      .from("transaksi_kasir")
+      .select("*")
+      .gte("created_at", `${tanggal}T00:00:00`)
+      .lte("created_at", `${tanggal}T23:59:59`)
+      .order("created_at", { ascending: false });
+
+
+    if (error) throw error;
+
+
+    let totalPendapatan = 0;
+
+
+    transaksi.forEach((trx) => {
+      totalPendapatan += Number(
+        trx.total ||
+        trx.total_harga ||
+        0
+      );
+    });
+
+
+    res.json({
+      tanggal,
+      jumlah_transaksi: transaksi.length,
+      total_pendapatan: totalPendapatan,
+      transaksi
+    });
+
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+const financialReport = async (req, res, next) => {
+  try {
+    const {
+      periode = "harian",
+      tanggal,
+      bulan,
+      tahun
+    } = req.query;
+
+
+    const now = new Date();
+
+    let startDate;
+    let endDate;
+
+
+    // =====================
+    // LAPORAN HARIAN
+    // =====================
+    if (periode === "harian") {
+
+      const date =
+        tanggal ||
+        now.toISOString().slice(0,10);
+
+
+      startDate =
+        `${date}T00:00:00`;
+
+      endDate =
+        `${date}T23:59:59`;
+
+    }
+
+
+
+    // =====================
+    // LAPORAN BULANAN
+    // =====================
+    if (periode === "bulanan") {
+
+      const year =
+        tahun ||
+        now.getFullYear();
+
+
+      const month =
+        bulan ||
+        now.getMonth()+1;
+
+
+      startDate =
+        `${year}-${String(month).padStart(2,"0")}-01T00:00:00`;
+
+
+      const lastDay =
+        new Date(
+          year,
+          month,
+          0
+        ).getDate();
+
+
+      endDate =
+        `${year}-${String(month).padStart(2,"0")}-${lastDay}T23:59:59`;
+
+    }
+
+
+
+
+    // =====================
+    // LAPORAN TAHUNAN
+    // =====================
+    if (periode === "tahunan") {
+
+      const year =
+        tahun ||
+        now.getFullYear();
+
+
+      startDate =
+        `${year}-01-01T00:00:00`;
+
+
+      endDate =
+        `${year}-12-31T23:59:59`;
+
+    }
+
+
+
+
+    const {
+      data: transaksi,
+      error
+    } = await supabase
+      .from("transaksi_kasir")
+      .select("*")
+      .gte(
+        "created_at",
+        startDate
+      )
+      .lte(
+        "created_at",
+        endDate
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      );
+
+
+
+    if(error)
+      throw error;
+
+
+
+    let totalMasuk = 0;
+
+
+
+    transaksi.forEach((trx)=>{
+
+      totalMasuk += Number(
+        trx.total || 0
+      );
+
+    });
+
+
+
+    res.json({
+
+      periode,
+
+      mulai:startDate,
+
+      selesai:endDate,
+
+      jumlah_transaksi:
+        transaksi.length,
+
+
+      total_masuk:
+        totalMasuk,
+
+
+      transaksi
+
+    });
+
+
+
+  } catch(error){
+
+    next(error);
+
+  }
+
+};
+
 module.exports = {
   dashboard,
   users,
   reservations,
   updateReservationStatus,
   cashierData,
-  createCashierTransaction
+  createCashierTransaction,
+  dailyFinancialReport,
+  financialReport
 };
+

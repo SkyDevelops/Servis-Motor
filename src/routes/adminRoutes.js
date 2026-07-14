@@ -14,5 +14,7 @@ router.get("/reservations", adminController.reservations);
 router.put("/reservations/:id", adminController.updateReservationStatus);
 router.get("/cashier", adminController.cashierData);
 router.post("/cashier", adminController.createCashierTransaction);
-
+router.get("/laporan-keuangan-harian",adminController.dailyFinancialReport);
+router.get("/laporan-keuangan",adminController.financialReport);
+router.get("/test", (req,res)=>{res.json({message:"admin route aktif"});});
 module.exports = router;
