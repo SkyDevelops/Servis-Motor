@@ -1,119 +1,43 @@
 # SiMontir
 
-SiMontir adalah sistem reservasi servis motor berbasis web dengan Express.js, Bootstrap 5, Supabase PostgreSQL, dan Supabase Auth.
+(deskripsi project Anda)
 
-## Struktur Folder
+## Collaborators
 
-```text
-User/       Web pelanggan, login/sign up pelanggan, reservasi servis
-Admin/      Dashboard admin dengan port terpisah
-src/        Backend shared: controller, route, service, config Supabase
-```
+### 1. M. Akhdanul Kirom
+- NIM: 062023107706-gif
+- Role: Bug Fixxing
+- Profile:
+  - GitHub: https://github.com/062023107706-git
 
-Logo aplikasi berada di:
+### 2. SkyDevelops
+- Role: Admin Controller
+- Profile:
+  - GitHub: https://github.com/SkyDevelops
 
-```text
-src/public/assets/logo-SiMontir.webp
-```
+### 3. WahyuFatkhurRokhman
+- Role: User Controller
+- Profile:
+  - GitHub: https://github.com/WahyuFatkhurRokhman
 
-## Environment
+## Features
 
-Isi `.env`:
+(fitur SiMontir)
 
-```env
-SUPABASE_URL=
-SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_ANON_KEY=
-SUPABASE_SECRET_KEY=
-JWT_SECRET=
-PORT=3000
-USER_PORT=3000
-ADMIN_PORT=3001
-```
+## Tech Stack
 
-Jalankan SQL di `supabase_schema.sql` melalui Supabase SQL Editor.
+(teknologi)
 
-## Menjalankan Web Pelanggan
+## Project Structure
 
-```bash
-npm run dev:user
-```
+(struktur folder)
 
-atau:
+## Installation & Running
 
-```bash
-npm run dev
-```
+(cara menjalankan tanpa membocorkan env/API key)
 
-URL:
+## API Documentation
 
-```text
-http://localhost:3000
-```
+(endpoint yang aman)
 
-Pengunjung bisa membuka halaman informasi tanpa login. Login/sign up hanya diperlukan ketika pelanggan ingin menambahkan kendaraan dan membuat reservasi servis.
-
-## Menjalankan Dashboard Admin
-
-```bash
-npm run dev:admin
-```
-
-URL:
-
-```text
-http://localhost:3001
-```
-
-Akun admin harus memiliki `role = admin` di tabel `users`.
-
-## Endpoint
-
-### Authentication
-
-```http
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/logout
-```
-
-### Vehicle
-
-```http
-GET    /api/vehicles
-POST   /api/vehicles
-PUT    /api/vehicles/:id
-DELETE /api/vehicles/:id
-```
-
-### Reservation
-
-```http
-GET    /api/reservations
-POST   /api/reservations
-PUT    /api/reservations/:id
-DELETE /api/reservations/:id
-POST   /api/reservations/recommendation
-```
-
-### Admin
-
-```http
-GET /api/admin/dashboard
-GET /api/admin/users
-GET /api/admin/reservations
-PUT /api/admin/reservations/:id
-```
-
-## Rekomendasi Servis
-
-Fitur rekomendasi servis memberi saran jenis servis berdasarkan kilometer motor:
-
-```text
-< 5.000 km    Servis Ringan
-< 10.000 km   Ganti Oli
-< 20.000 km   Tune Up
->= 20.000 km  Servis Besar
-```
-
-Ini bukan AI kompleks. Di aplikasi ini fungsinya sebagai fitur bantu agar pelanggan punya saran awal sebelum membuat reservasi.
+## License / Notes
